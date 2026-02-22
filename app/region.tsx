@@ -186,11 +186,20 @@ export default function Index() {
       const detailedPokemons = await Promise.all(
         data.pokemon_species.map(async (species: any) => {
           try {
+            // `species.url` looks like:
+            // https://pokeapi.co/api/v2/pokemon-species/{id}/
+            const match = species.url.match(/\/pokemon-species\/(\d+)\//);
+            const pokemonId = match?.[1];
+            if (!pokemonId) {
+              console.log("Could not parse pokemon id from species url", species.url);
+              return null;
+            }
+
             const res = await fetch(
-              `https://pokeapi.co/api/v2/pokemon/${species.name}`,
+              `https://pokeapi.co/api/v2/pokemon/${pokemonId}`,
             );
             if (!res.ok) {
-              console.log("Failed to fetch pokemon", species.name, res.status);
+              console.log("Failed to fetch pokemon", res.status);
               return null;
             }
             const details = await res.json();
