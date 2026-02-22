@@ -158,6 +158,7 @@ function PokeItem({
 
 export default function Index() {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
+  const [showTopFade, setShowTopFade] = useState(false);
   const params = useLocalSearchParams<{ name?: string }>();
 
   useEffect(() => {
@@ -216,48 +217,74 @@ export default function Index() {
     }
   }
   return (
-    <ScrollView contentContainerStyle={styles.pokeGrid}>
-      {Array.from({ length: Math.ceil(pokemons.length / 3) }).map(
-        (_, rowIndex, rows) => {
-          const start = rowIndex * 3;
-          const rowItems = pokemons.slice(start, start + 3);
-          const rowItemsWithPlaceholders: (Pokemon | null)[] = [...rowItems];
+    <View style={styles.screen}>
+      <ScrollView
+        contentContainerStyle={styles.pokeGrid}
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={(event) => {
+          const offsetY = event.nativeEvent.contentOffset.y;
+          setShowTopFade(offsetY > 2);
+        }}
+      >
+        {Array.from({ length: Math.ceil(pokemons.length / 3) }).map(
+          (_, rowIndex, rows) => {
+            const start = rowIndex * 3;
+            const rowItems = pokemons.slice(start, start + 3);
+            const rowItemsWithPlaceholders: (Pokemon | null)[] = [...rowItems];
 
-          // pad row to always have 3 cells
-          while (rowItemsWithPlaceholders.length < 3) {
-            rowItemsWithPlaceholders.push(null);
-          }
+            // pad row to always have 3 cells
+            while (rowItemsWithPlaceholders.length < 3) {
+              rowItemsWithPlaceholders.push(null);
+            }
 
-          const isLastRow = rowIndex === rows.length - 1;
+            const isLastRow = rowIndex === rows.length - 1;
 
-          return (
-            <View
-              key={rowIndex}
-              style={[styles.row, !isLastRow && styles.rowBottomBorder]}
-            >
-              {rowItemsWithPlaceholders.map((pokemon, columnIndex) => {
-                const isLastColumn = columnIndex === 2;
-                const key =
-                  pokemon?.name ?? `placeholder-${rowIndex}-${columnIndex}`;
+            return (
+              <View
+                key={rowIndex}
+                style={[styles.row, !isLastRow && styles.rowBottomBorder]}
+              >
+                {rowItemsWithPlaceholders.map((pokemon, columnIndex) => {
+                  const isLastColumn = columnIndex === 2;
+                  const key =
+                    pokemon?.name ?? `placeholder-${rowIndex}-${columnIndex}`;
 
-                return (
-                  <PokeItem
-                    key={key}
-                    pokemon={pokemon}
-                    isPlaceholder={!pokemon}
-                    showRightBorder={!isLastColumn}
-                  />
-                );
-              })}
-            </View>
-          );
-        },
+                  return (
+                    <PokeItem
+                      key={key}
+                      pokemon={pokemon}
+                      isPlaceholder={!pokemon}
+                      showRightBorder={!isLastColumn}
+                    />
+                  );
+                })}
+              </View>
+            );
+          },
+        )}
+      </ScrollView>
+      {showTopFade && (
+        <LinearGradient
+          pointerEvents="none"
+          colors={["#000000", "transparent"]}
+          style={styles.topFade}
+        />
       )}
-    </ScrollView>
+      <LinearGradient
+        pointerEvents="none"
+        colors={["transparent", "#020617"]}
+        style={styles.bottomFade}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: "#000000",
+  },
   id: {
     fontSize: 10,
     textAlign: "left",
@@ -278,10 +305,8 @@ const styles = StyleSheet.create({
     textTransform: "capitalize",
   },
   pokeGrid: {
-    borderWidth: 1,
-    borderColor: "black",
     flexDirection: "column",
-    backgroundColor: "#0f172a",
+    backgroundColor: "#000000",
   },
   spriteWrapper: {
     width: 100,
@@ -337,5 +362,19 @@ const styles = StyleSheet.create({
   },
   iconBage: {
     alignSelf: "center",
+  },
+  topFade: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+  },
+  bottomFade: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 60,
   },
 });
