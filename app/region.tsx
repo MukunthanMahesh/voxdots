@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -37,25 +38,25 @@ const colorsByType = {
   fairy: "#D685AD",
 };
 
-const icons: Record<string, any> = {
-  bug: require("../assets/type_icons/bug.svg"),
-  dark: require("../assets/type_icons/dark.svg"),
-  dragon: require("../assets/type_icons/dragon.svg"),
-  electric: require("../assets/type_icons/electric.svg"),
-  fairy: require("../assets/type_icons/fairy.svg"),
-  fighting: require("../assets/type_icons/fighting.svg"),
-  fire: require("../assets/type_icons/fire.svg"),
-  flying: require("../assets/type_icons/flying.svg"),
-  ghost: require("../assets/type_icons/ghost.svg"),
-  grass: require("../assets/type_icons/grass.svg"),
-  ground: require("../assets/type_icons/ground.svg"),
-  ice: require("../assets/type_icons/ice.svg"),
-  normal: require("../assets/type_icons/normal.svg"),
-  poison: require("../assets/type_icons/poison.svg"),
-  psychic: require("../assets/type_icons/psychic.svg"),
-  rock: require("../assets/type_icons/rock.svg"),
-  steel: require("../assets/type_icons/steel.svg"),
-  water: require("../assets/type_icons/water.svg"),
+const iconsByType: Record<string, string> = {
+  bug: "ladybug",
+  dark: "weather-night",
+  dragon: "dragon",
+  electric: "flash",
+  fairy: "magic-staff",
+  fighting: "boxing-glove",
+  fire: "fire",
+  flying: "feather",
+  ghost: "ghost",
+  grass: "leaf",
+  ground: "terrain",
+  ice: "snowflake",
+  normal: "circle",
+  poison: "biohazard",
+  psychic: "eye",
+  rock: "diamond-stone",
+  steel: "cog",
+  water: "water",
 };
 
 function PokeItem({
@@ -73,6 +74,8 @@ function PokeItem({
 
   if (!pokemon) return null;
 
+  const typeNames = pokemon.types.map((t) => t.type.name);
+
   return (
     <Link
       href={{ pathname: "/details", params: { name: pokemon.name } }}
@@ -85,10 +88,26 @@ function PokeItem({
           style={{ width: 100, height: 100 }}
         />
         <Text style={styles.name}>{pokemon.name}</Text>
-        <View>
-          <Text style={styles.type}>{pokemon.types[0].type.name}</Text>
-          <Image source={icons} />
-        </View>
+        {typeNames.length > 0 && (
+          <View style={styles.typeRow}>
+            {typeNames.map((typeName) => {
+              const iconName = iconsByType[typeName];
+              return (
+                <View key={typeName}>
+                  {iconName && (
+                    <MaterialCommunityIcons
+                      name={iconName as any}
+                      size={20}
+                      // @ts-ignore
+                      color={colorsByType[typeName] ?? "black"}
+                      style={styles.typeIcon}
+                    />
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        )}
       </View>
     </Link>
   );
@@ -208,9 +227,9 @@ const styles = StyleSheet.create({
     textTransform: "capitalize",
   },
   type: {
-    fontSize: 10,
+    fontSize: 6,
     fontWeight: "bold",
-    color: "gray",
+    color: "white",
     textAlign: "center",
     textTransform: "capitalize",
   },
@@ -218,6 +237,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "black",
     flexDirection: "column",
+  },
+  typeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 4,
+    marginTop: 4,
+  },
+  typeIcon: {
+    marginRight: 4,
   },
   row: {
     flexDirection: "row",
