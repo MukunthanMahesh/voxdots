@@ -1,3 +1,4 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { Link, useLocalSearchParams } from "expo-router";
 import type { ComponentType } from "react";
 import { useEffect, useState } from "react";
@@ -88,24 +89,46 @@ function PokeItem({
   isPlaceholder?: boolean;
 }) {
   if (isPlaceholder) {
-    return <View style={[styles.cell, showRightBorder && styles.cellBorder]} />;
+    return (
+      <View style={[styles.cell, showRightBorder && styles.cellRightBorder]} />
+    );
   }
 
   if (!pokemon) return null;
 
+  const primaryTypeName = pokemon.types[0]?.type.name;
+  const secondaryTypeName = pokemon.types[1]?.type.name;
   const typeNames = pokemon.types.map((t) => t.type.name);
 
   return (
     <Link
       href={{ pathname: "/details", params: { name: pokemon.name } }}
-      style={[styles.cell, showRightBorder && styles.cellBorder]}
+      style={[styles.cell, showRightBorder && styles.cellRightBorder]}
     >
       <View>
         <Text style={styles.id}>{pokemon.id.toString().padStart(4, "0")}</Text>
-        <Image
-          source={{ uri: pokemon.image }}
-          style={{ width: 100, height: 100 }}
-        />
+        <View style={styles.spriteWrapper}>
+          {primaryTypeName && (
+            <LinearGradient
+              colors={[
+                // @ts-ignore
+                `${colorsByType[primaryTypeName] ?? "#000000"}40`,
+                // @ts-ignore
+                `${colorsByType[secondaryTypeName] ?? colorsByType[primaryTypeName]}20`,
+                // @ts-ignore
+                `${colorsByType[secondaryTypeName] ?? colorsByType[primaryTypeName]}10`,
+                // @ts-ignore
+                `${colorsByType[primaryTypeName] ?? "#000000"}00`,
+                // `${colorsByType[primaryTypeName] ?? "#000000"}30`,
+              ]}
+              locations={[0, 0.35, 0.5, 1]}
+              style={styles.spriteGradient}
+              start={{ x: 0.3, y: 0.3 }}
+              end={{ x: 0.7, y: 0.7 }}
+            />
+          )}
+          <Image source={{ uri: pokemon.image }} style={styles.spriteImage} />
+        </View>
         <Text style={styles.name}>{pokemon.name}</Text>
         {typeNames.length > 0 && (
           <View style={styles.typeRow}>
@@ -210,7 +233,7 @@ export default function Index() {
           return (
             <View
               key={rowIndex}
-              style={[styles.row, !isLastRow && styles.rowBorder]}
+              style={[styles.row, !isLastRow && styles.rowBottomBorder]}
             >
               {rowItemsWithPlaceholders.map((pokemon, columnIndex) => {
                 const isLastColumn = columnIndex === 2;
@@ -238,11 +261,12 @@ const styles = StyleSheet.create({
   id: {
     fontSize: 10,
     textAlign: "left",
-    color: "gray",
+    color: "lightgrey",
   },
   name: {
     fontSize: 14,
     fontWeight: "bold",
+    color: "white",
     textAlign: "center",
     textTransform: "capitalize",
   },
@@ -257,6 +281,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "black",
     flexDirection: "column",
+    backgroundColor: "#0f172a",
+  },
+  spriteWrapper: {
+    width: 100,
+    height: 100,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  spriteGradient: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    borderRadius: 999,
+  },
+  spriteImage: {
+    width: 80,
+    height: 80,
+    resizeMode: "contain",
   },
   typeRow: {
     flexDirection: "row",
@@ -279,9 +321,9 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
   },
-  rowBorder: {
+  rowBottomBorder: {
     borderBottomWidth: 0.2,
-    borderColor: "grey",
+    borderColor: "lightgrey",
   },
   cell: {
     width: "33.33%", // 3 columns
@@ -289,9 +331,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  cellBorder: {
+  cellRightBorder: {
     borderRightWidth: 0.2,
-    borderColor: "grey",
+    borderColor: "lightgrey",
   },
   iconBage: {
     alignSelf: "center",
