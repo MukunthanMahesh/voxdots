@@ -1,11 +1,12 @@
-import { Link } from "expo-router";
+import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
 interface Pokemon {
+  id: number;
   name: string;
   image: string;
-  imageBack: string;
+  // imageBack: string;
   types: PokemonType[];
 }
 
@@ -37,79 +38,94 @@ const colorsByType = {
   fairy: "#D685AD",
 };
 
+function PokeItem({ pokemon }: { pokemon: Pokemon }) {
+  return (
+    <Link
+      href={{ pathname: "/details", params: { name: pokemon.name } }}
+      style={[
+        {
+          // @ts-ignore
+          backgroundColor: colorsByType[pokemon.types[0].type.name] + 50,
+        },
+        styles.pokeCell,
+      ]}
+    >
+      <View>
+        <Text style={styles.name}>{pokemon.name}</Text>
+        <Text style={styles.type}>{pokemon.types[0].type.name}</Text>
+        <Image
+          source={{ uri: pokemon.image }}
+          style={{ width: 100, height: 100 }}
+        />
+      </View>
+    </Link>
+  );
+}
+
 export default function Index() {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
+  const params = useLocalSearchParams<{ name?: string }>();
 
-  console.log(JSON.stringify(pokemons[0], null, 2));
   useEffect(() => {
-    // fetch pokemon data
-    fetchPokemons();
-  }, []);
+    if (params.name) {
+      fetchPokemons(params.name);
+    }
+  }, [params.name]);
 
-  async function fetchPokemons() {
+  async function fetchPokemons(generationName: string) {
     try {
       const response = await fetch(
-        "https://pokeapi.co/api/v2/pokemon?limit=20&offset=0",
+        `https://pokeapi.co/api/v2/generation/${generationName}/`,
       );
+      if (!response.ok) {
+        console.log(
+          "Failed to fetch generation",
+          generationName,
+          response.status,
+        );
+        return;
+      }
       const data = await response.json();
 
-      // Fethc detailed info for each pokemon in parallel
+      // Fetch detailed info for each pokemon species in this generation in parallel
       const detailedPokemons = await Promise.all(
-        data.results.map(async (pokemon: any) => {
-          const res = await fetch(pokemon.url);
-          const details = await res.json();
-          return {
-            name: pokemon.name,
-            image: details.sprites.front_default, // main sprite
-            imageBack: details.sprites.back_default,
-            types: details.types,
-          };
+        data.pokemon_species.map(async (species: any) => {
+          try {
+            const res = await fetch(
+              `https://pokeapi.co/api/v2/pokemon/${species.name}`,
+            );
+            if (!res.ok) {
+              console.log("Failed to fetch pokemon", species.name, res.status);
+              return null;
+            }
+            const details = await res.json();
+            return {
+              id: details.id,
+              name: details.name,
+              image: details.sprites.front_default, // main sprite
+              // imageBack: details.sprites.back_default,
+              types: details.types,
+            };
+          } catch (error) {
+            console.log("Error fetching pokemon", species.name, error);
+            return null;
+          }
         }),
       );
       // save data in state variable
-      setPokemons(detailedPokemons);
+      setPokemons(
+        detailedPokemons
+          .filter((pokemon): pokemon is Pokemon => pokemon !== null)
+          .sort((a, b) => a.id - b.id),
+      );
     } catch (e) {
       console.log(e);
     }
   }
   return (
-    <ScrollView
-      contentContainerStyle={{
-        gap: 16,
-        padding: 16,
-      }}
-    >
+    <ScrollView contentContainerStyle={styles.pokeGrid}>
       {pokemons.map((pokemon) => (
-        <Link
-          key={pokemon.name}
-          href={{ pathname: "/details", params: { name: pokemon.name } }}
-          style={{
-            // @ts-ignore
-            backgroundColor: colorsByType[pokemon.types[0].type.name] + 50,
-            padding: 20,
-            borderRadius: 20,
-          }}
-        >
-          <View>
-            <Text style={styles.name}>{pokemon.name}</Text>
-            <Text style={styles.type}>{pokemon.types[0].type.name}</Text>
-
-            <View
-              style={{
-                flexDirection: "row",
-              }}
-            >
-              <Image
-                source={{ uri: pokemon.image }}
-                style={{ width: 150, height: 150 }}
-              />
-              <Image
-                source={{ uri: pokemon.imageBack }}
-                style={{ width: 150, height: 150 }}
-              />
-            </View>
-          </View>
-        </Link>
+        <PokeItem key={pokemon.name} pokemon={pokemon} />
       ))}
     </ScrollView>
   );
@@ -117,14 +133,28 @@ export default function Index() {
 
 const styles = StyleSheet.create({
   name: {
-    fontSize: 28,
+    fontSize: 14,
     fontWeight: "bold",
     textAlign: "center",
   },
   type: {
-    fontSize: 20,
+    fontSize: 10,
     fontWeight: "bold",
     color: "gray",
     textAlign: "center",
+  },
+  pokeGrid: {
+    padding: 16,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  pokeCell: {
+    width: "32%", // ~3 columns
+    padding: 8,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
   },
 });
