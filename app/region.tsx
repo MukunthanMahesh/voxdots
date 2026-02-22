@@ -6,7 +6,6 @@ interface Pokemon {
   id: number;
   name: string;
   image: string;
-  // imageBack: string;
   types: PokemonType[];
 }
 
@@ -38,25 +37,58 @@ const colorsByType = {
   fairy: "#D685AD",
 };
 
-function PokeItem({ pokemon }: { pokemon: Pokemon }) {
+const icons: Record<string, any> = {
+  bug: require("../assets/type_icons/bug.svg"),
+  dark: require("../assets/type_icons/dark.svg"),
+  dragon: require("../assets/type_icons/dragon.svg"),
+  electric: require("../assets/type_icons/electric.svg"),
+  fairy: require("../assets/type_icons/fairy.svg"),
+  fighting: require("../assets/type_icons/fighting.svg"),
+  fire: require("../assets/type_icons/fire.svg"),
+  flying: require("../assets/type_icons/flying.svg"),
+  ghost: require("../assets/type_icons/ghost.svg"),
+  grass: require("../assets/type_icons/grass.svg"),
+  ground: require("../assets/type_icons/ground.svg"),
+  ice: require("../assets/type_icons/ice.svg"),
+  normal: require("../assets/type_icons/normal.svg"),
+  poison: require("../assets/type_icons/poison.svg"),
+  psychic: require("../assets/type_icons/psychic.svg"),
+  rock: require("../assets/type_icons/rock.svg"),
+  steel: require("../assets/type_icons/steel.svg"),
+  water: require("../assets/type_icons/water.svg"),
+};
+
+function PokeItem({
+  pokemon,
+  showRightBorder,
+  isPlaceholder,
+}: {
+  pokemon?: Pokemon | null;
+  showRightBorder?: boolean;
+  isPlaceholder?: boolean;
+}) {
+  if (isPlaceholder) {
+    return <View style={[styles.cell, showRightBorder && styles.cellBorder]} />;
+  }
+
+  if (!pokemon) return null;
+
   return (
     <Link
       href={{ pathname: "/details", params: { name: pokemon.name } }}
-      style={[
-        {
-          // @ts-ignore
-          backgroundColor: colorsByType[pokemon.types[0].type.name] + 50,
-        },
-        styles.pokeCell,
-      ]}
+      style={[styles.cell, showRightBorder && styles.cellBorder]}
     >
       <View>
-        <Text style={styles.name}>{pokemon.name}</Text>
-        <Text style={styles.type}>{pokemon.types[0].type.name}</Text>
+        <Text style={styles.id}>{pokemon.id.toString().padStart(4, "0")}</Text>
         <Image
           source={{ uri: pokemon.image }}
           style={{ width: 100, height: 100 }}
         />
+        <Text style={styles.name}>{pokemon.name}</Text>
+        <View>
+          <Text style={styles.type}>{pokemon.types[0].type.name}</Text>
+          <Image source={icons} />
+        </View>
       </View>
     </Link>
   );
@@ -103,7 +135,6 @@ export default function Index() {
               id: details.id,
               name: details.name,
               image: details.sprites.front_default, // main sprite
-              // imageBack: details.sprites.back_default,
               types: details.types,
             };
           } catch (error) {
@@ -124,37 +155,88 @@ export default function Index() {
   }
   return (
     <ScrollView contentContainerStyle={styles.pokeGrid}>
-      {pokemons.map((pokemon) => (
-        <PokeItem key={pokemon.name} pokemon={pokemon} />
-      ))}
+      {Array.from({ length: Math.ceil(pokemons.length / 3) }).map(
+        (_, rowIndex, rows) => {
+          const start = rowIndex * 3;
+          const rowItems = pokemons.slice(start, start + 3);
+          const rowItemsWithPlaceholders: (Pokemon | null)[] = [...rowItems];
+
+          // pad row to always have 3 cells
+          while (rowItemsWithPlaceholders.length < 3) {
+            rowItemsWithPlaceholders.push(null);
+          }
+
+          const isLastRow = rowIndex === rows.length - 1;
+
+          return (
+            <View
+              key={rowIndex}
+              style={[styles.row, !isLastRow && styles.rowBorder]}
+            >
+              {rowItemsWithPlaceholders.map((pokemon, columnIndex) => {
+                const isLastColumn = columnIndex === 2;
+                const key =
+                  pokemon?.name ?? `placeholder-${rowIndex}-${columnIndex}`;
+
+                return (
+                  <PokeItem
+                    key={key}
+                    pokemon={pokemon}
+                    isPlaceholder={!pokemon}
+                    showRightBorder={!isLastColumn}
+                  />
+                );
+              })}
+            </View>
+          );
+        },
+      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  id: {
+    fontSize: 10,
+    textAlign: "left",
+    color: "gray",
+  },
   name: {
     fontSize: 14,
     fontWeight: "bold",
     textAlign: "center",
+    textTransform: "capitalize",
   },
   type: {
     fontSize: 10,
     fontWeight: "bold",
     color: "gray",
     textAlign: "center",
+    textTransform: "capitalize",
   },
   pokeGrid: {
-    padding: 16,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "black",
+    flexDirection: "column",
   },
-  pokeCell: {
-    width: "32%", // ~3 columns
+  row: {
+    flexDirection: "row",
+  },
+  rowBorder: {
+    borderBottomWidth: 0.2,
+    borderColor: "grey",
+  },
+  cell: {
+    width: "33.33%", // 3 columns
     padding: 8,
-    borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 8,
+  },
+  cellBorder: {
+    borderRightWidth: 0.2,
+    borderColor: "grey",
+  },
+  iconBage: {
+    alignSelf: "center",
   },
 });
