@@ -1,7 +1,26 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Link, useLocalSearchParams } from "expo-router";
+import type { ComponentType } from "react";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import type { SvgProps } from "react-native-svg";
+import BugIcon from "../assets/type_icons/bug.svg";
+import DarkIcon from "../assets/type_icons/dark.svg";
+import DragonIcon from "../assets/type_icons/dragon.svg";
+import ElectricIcon from "../assets/type_icons/electric.svg";
+import FairyIcon from "../assets/type_icons/fairy.svg";
+import FightingIcon from "../assets/type_icons/fighting.svg";
+import FireIcon from "../assets/type_icons/fire.svg";
+import FlyingIcon from "../assets/type_icons/flying.svg";
+import GhostIcon from "../assets/type_icons/ghost.svg";
+import GrassIcon from "../assets/type_icons/grass.svg";
+import GroundIcon from "../assets/type_icons/ground.svg";
+import IceIcon from "../assets/type_icons/ice.svg";
+import NormalIcon from "../assets/type_icons/normal.svg";
+import PoisonIcon from "../assets/type_icons/poison.svg";
+import PsychicIcon from "../assets/type_icons/psychic.svg";
+import RockIcon from "../assets/type_icons/rock.svg";
+import SteelIcon from "../assets/type_icons/steel.svg";
+import WaterIcon from "../assets/type_icons/water.svg";
 
 interface Pokemon {
   id: number;
@@ -38,25 +57,25 @@ const colorsByType = {
   fairy: "#D685AD",
 };
 
-const iconsByType: Record<string, string> = {
-  bug: "ladybug",
-  dark: "weather-night",
-  dragon: "dragon",
-  electric: "flash",
-  fairy: "magic-staff",
-  fighting: "boxing-glove",
-  fire: "fire",
-  flying: "feather",
-  ghost: "ghost",
-  grass: "leaf",
-  ground: "terrain",
-  ice: "snowflake",
-  normal: "circle",
-  poison: "biohazard",
-  psychic: "eye",
-  rock: "diamond-stone",
-  steel: "cog",
-  water: "water",
+const typeIcons: Record<string, ComponentType<SvgProps>> = {
+  bug: BugIcon,
+  dark: DarkIcon,
+  dragon: DragonIcon,
+  electric: ElectricIcon,
+  fairy: FairyIcon,
+  fighting: FightingIcon,
+  fire: FireIcon,
+  flying: FlyingIcon,
+  ghost: GhostIcon,
+  grass: GrassIcon,
+  ground: GroundIcon,
+  ice: IceIcon,
+  normal: NormalIcon,
+  poison: PoisonIcon,
+  psychic: PsychicIcon,
+  rock: RockIcon,
+  steel: SteelIcon,
+  water: WaterIcon,
 };
 
 function PokeItem({
@@ -91,19 +110,20 @@ function PokeItem({
         {typeNames.length > 0 && (
           <View style={styles.typeRow}>
             {typeNames.map((typeName) => {
-              const iconName = iconsByType[typeName];
+              const Icon = typeIcons[typeName];
               return (
-                <View key={typeName}>
-                  {iconName && (
-                    <MaterialCommunityIcons
-                      name={iconName as any}
-                      size={20}
+                Icon && (
+                  <View
+                    key={typeName}
+                    style={[
+                      styles.typeBadge,
                       // @ts-ignore
-                      color={colorsByType[typeName] ?? "black"}
-                      style={styles.typeIcon}
-                    />
-                  )}
-                </View>
+                      { backgroundColor: colorsByType[typeName] ?? "#666666" },
+                    ]}
+                  >
+                    <Icon width={12} height={12} style={styles.typeIcon} />
+                  </View>
+                )
               );
             })}
           </View>
@@ -246,7 +266,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   typeIcon: {
-    marginRight: 4,
+    margin: 0,
+  },
+  typeBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 0.2,
+    alignItems: "center",
+    justifyContent: "center",
   },
   row: {
     flexDirection: "row",
